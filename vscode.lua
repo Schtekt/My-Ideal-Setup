@@ -1,3 +1,4 @@
+require "vscodeTasks"
 local p = premake
 
 p.modules.vscode = {}
@@ -10,13 +11,14 @@ local configurations = {}
 local configurationOptions = ""
 local platforms = {}
 local platformOptions = ""
+local operatingSystem = ""
 
 newaction {
     trigger = "vscode",
     description = "Generate vscode tasks",
 
     onWorkspace = function(wrk)
-
+        operatingSystem = wrk.system
         for index, c in ipairs(wrk.configurations) do
             if #configurations == 0 then
                 configurationOptions = configurationOptions .. [["]] .. c .. [["]]
@@ -37,7 +39,6 @@ newaction {
     end,
 
     onProject = function(prj)
-        
         if prj.kind == 'ConsoleApp' or prj.kind == 'WindowedApp' then
             if #projects == 0 then
                 projectOptions = projectOptions .. [["]] .. prj.name .. [["]]
@@ -51,116 +52,21 @@ newaction {
     execute = function()
         file = io.open(".vscode/launch.json", "w")
         io.output(file)
-
-io.write([[{
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Launch (VS2022)",
-            "program": "${workspaceFolder}\\Build\\bin\\${input:buildProject}\\${input:buildProject}.exe",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
-            "console": "externalTerminal"
-        }
-    ],
-    "inputs": [
-        {
-            "id": "buildProject",
-            "description": "Select project to launch: ",
-            "default": "]] .. projects[1] .. [[",
-            "type": "pickString",
-            "options": []] .. projectOptions .. [[]
-        }
-    ]
-}]])
+        if operatingSystem == 'windows' then
+            io.write(winLaunch(projects[1], projectOptions, configurations, platforms))
+        elseif operatingSystem == 'linux' then
+            io.write(linLaunch(projects[1], projectOptions, configurations, platforms))
+        end
         io.close(file)
 
         file = io.open(".vscode/tasks.json", "w")
         io.output(file)
-
-io.write([[
-{
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "Clean Build folder",
-            "type": "shell",
-            "group": "none",
-            "windows": {
-                "command": "Remove-Item",
-                "args": [
-                    "build",
-                    "-Recurse",
-                    "-Force",
-                    "-Confirm:$false",
-                    ";",
-                    "echo",
-                    "Cleaning Build folder."
-                ]
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Generate build files (VS2022)",
-            "type": "shell",
-            "group": "none",
-            "command": "premake5 vs2022",
-            "problemMatcher": []
-        },
-        {
-            "dependsOn": [
-                "Generate build files (VS2022)",
-                "Clean Build folder"
-            ],
-            "label": "Build (VS2022)",
-            "type": "shell",
-            "command": "msbuild",
-            "args": [
-                "${workspaceFolderBaseName}.sln",
-                "/m",
-                "/property:Configuration=${input:buildConfigVS2022}",
-                "/property:Platform=${input:buildPlatformVS2022}",
-                "/property:GenerateFullPaths=true",
-                "/t:build"
-            ],
-            "presentation": {
-                "reveal": "silent"
-            },
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "dependsOn": [
-                "Build (VS2022)"
-            ],
-            "label": "Run unit tests",
-            "command": "Build\\bin\\Testing\\Testing.exe",
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-        }
-    ],
-    "inputs": [
-        {
-            "id": "buildConfigVS2022",
-            "description": "Select build config for VS2022",
-            "default": "]] .. configurations[1] .. [[",
-            "type": "pickString",
-            "options": []] .. configurationOptions .. [[]
-        },
-        {
-            "id": "buildPlatformVS2022",
-            "description": "Select build platform for VS2022:",
-            "default": "]] .. platforms[1] .. [[",
-            "type": "pickString",
-            "options": []] .. platformOptions .. [[]
-        }
-    ]
-}]])
-    io.close(file)
+        if operatingSystem == 'windows' then
+            io.write(winTasks(configurations[1], configurationOptions, platforms[1], platformOptions))
+        elseif operatingSystem == 'linux' then
+            io.write(linTasks(configurations[1], configurationOptions, platforms[1], platformOptions))
+        end
+        io.close(file)
     end
 }
 

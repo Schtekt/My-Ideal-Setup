@@ -2,20 +2,27 @@ require "vscode"
 require "clean"
 
 workspace "DummyWorkspace"
-    architecture "x86_64"
     cppdialect "C++17"
     configurations
     {
-        "Debug",
-        "Release"
+        "debug",
+        "release"
     }
     filter "system:windows"
-        platforms {"Win64"}
+        platforms {"win32", "win64"}
+    filter "system:linux"
+        platforms {"lin32", "lin64"}
+    
+    filter "platforms:win32 or lin32"
+        architecture "x86"
+    
+    filter "platforms:win64 or lin64"
+        architecture "x86_64"
 
-    filter "configurations:Debug"
+    filter "configurations:debug"
         defines { "DEBUG" }
         symbols "On"
-    filter "configurations:Release"
+    filter "configurations:release"
         defines { "NDEBUG" }
         optimize "On"
 

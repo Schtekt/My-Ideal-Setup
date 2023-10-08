@@ -4,6 +4,8 @@ newaction {
     execute = function()
         os.remove("**.vcxproj**")
         os.remove("**.sln")
+        os.remove("**.make")
+        os.remove("**Makefile")
         os.rmdir("./.vscode")
         os.rmdir("./.vs")
         os.rmdir("./Build")

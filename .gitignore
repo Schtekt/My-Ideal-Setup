@@ -3,3 +3,5 @@ Build
 **.sln
 **.exe
 .vscode/
+Makefile
+**.make
