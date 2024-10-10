@@ -1,11 +1,52 @@
+local workspaceName = ""
 local projectNames = {}
 local configurations = {}
+local operatingSystem = ""
+
+function winLaunch(projectName, outputFile)
+    outputFile:write(
+        "\t\t{\n" ..
+        "\t\t\t\"name\":\"" .. projectName .. "\",\n" ..
+        "\t\t\t\"type\":\"cppvsdbg\",\n" ..
+        "\t\t\t\"request\":\"launch\",\n" ..
+        "\t\t\t\"program\":\"${workspaceFolder}/Build/target/" .. projectName .. "/" .. projectName ..".exe\",\n" ..
+        "\t\t\t\"stopAtEntry\":false,\n" ..
+        "\t\t\t\"cwd\":\"${workspaceFolder}\",\n" ..
+        "\t\t\t\"console\": \"externalTerminal\"\n" ..
+        "\t\t},\n"
+    )
+end
+
+function linLaunch(projectName, outputFile)
+    outputFile:write(
+        "\t\t{\n" ..
+        "\t\t\t\"name\":\"" .. projectName .. "\",\n" ..
+        "\t\t\t\"type\":\"cppdbg\",\n" ..
+        "\t\t\t\"request\":\"launch\",\n" ..
+        "\t\t\t\"program\":\"${workspaceFolder}/Build/target/" .. projectName .. "/" .. projectName .."\",\n" ..
+        "\t\t\t\"stopAtEntry\":false,\n" ..
+        "\t\t\t\"externalConsole\":false,\n" ..
+        "\t\t\t\"cwd\":\"${workspaceFolder}\",\n" ..
+        "\t\t\t\"MIMode\":\"gdb\",\n" ..
+        "\t\t\t\"miDebuggerPath\":\"/usr/bin/gdb\",\n" ..
+        "\t\t\t\"setupCommands\": [\n" ..
+        "\t\t\t\t{\n" ..
+        "\t\t\t\t\t\"description\": \"Enable pretty-printing for gdb\",\n" ..
+        "\t\t\t\t\t\"text\": \"-enable-pretty-printing\",\n" ..
+        "\t\t\t\t\t\"ignoreFailures\": false\n" ..
+        "\t\t\t\t}\n" ..
+        "\t\t\t]\n" ..
+        "\t\t},\n"
+    )
+end
 
 newaction {
     trigger = "vscode",
     description = "Generate vscode tasks",
 
     onWorkspace = function(wrk)
+        workspaceName = wrk.name
+        operatingSystem = wrk.system
         for index, c in ipairs(wrk.configurations) do
             table.insert(configurations, c)
         end
@@ -83,7 +124,7 @@ newaction {
             "\t\t\t\"windows\": {\n" ..
             "\t\t\t\t\"command\": \"msbuild\",\n" ..
             "\t\t\t\t\"args\": [\n" ..
-            "\t\t\t\t\t\"Generated/${workspaceFolderBaseName}.sln\",\n" ..
+            "\t\t\t\t\t\"Generated/" .. workspaceName .. ".sln\",\n" ..
             "\t\t\t\t\t\"/m\",\n" ..
             "\t\t\t\t\t\"/property:Configuration=${input:buildConfig}\",\n" ..
             "\t\t\t\t\t\"/property:GenerateFullPaths=true\",\n" ..
@@ -115,32 +156,22 @@ newaction {
         tasksFile:close()
 
         launchFile = io.open(".vscode/launch.json", "w")
-        launchFile:write("{\n\t\"version\": \"0.2.0\",\n\t\"configurations\": [\n"
+        launchFile:write(
+            "{\n" ..
+            "\t\"version\": \"0.2.0\",\n" ..
+            "\t\"configurations\":[\n"
         )
 
         for index, name in pairs(projectNames) do
-            launchFile:write(
-            "\t\t{\n" ..
-            "\t\t\t\"name\":\"" .. name .. "\",\n" ..
-            "\t\t\t\"type\":\"cppdbg\",\n" ..
-            "\t\t\t\"request\":\"launch\",\n" ..
-            "\t\t\t\"program\":\"${workspaceFolder}/Build/target/" .. name .. "/" .. name .."\",\n" ..
-            "\t\t\t\"stopAtEntry\":false,\n" ..
-            "\t\t\t\"externalConsole\":false,\n" ..
-            "\t\t\t\"cwd\":\"${workspaceFolder}\",\n" ..
-            "\t\t\t\"MIMode\":\"gdb\",\n" ..
-            "\t\t\t\"miDebuggerPath\":\"/usr/bin/gdb\",\n" ..
-            "\t\t\t\"setupCommands\": [\n" ..
-            "\t\t\t\t{\n" ..
-            "\t\t\t\t\"description\": \"Enable pretty-printing for gdb\",\n" ..
-            "\t\t\t\t\"text\": \"-enable-pretty-printing\",\n" ..
-            "\t\t\t\t\"ignoreFailures\": false\n" ..
-            "\t\t\t\t}\n" ..
-            "\t\t\t]\n" ..
-            "\t\t},\n")
+            if operatingSystem == "windows" then
+                winLaunch(name, launchFile)
+            elseif operatingSystem == "linux" then
+                linLaunch(name, launchFile)
+            end
         end
+        launchFile:write("\t],\n")
 
-        launchFile:write("\t]\n}")
+        launchFile:write("\n}")
         launchFile:close()
     end
 }

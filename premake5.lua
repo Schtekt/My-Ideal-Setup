@@ -11,11 +11,14 @@ workspace "DummyWorkspace"
     }
 
     architecture "x86_64"
+    staticruntime "on"
 
     filter "configurations:debug"
+        runtime "Debug"
         defines { "DEBUG" }
         symbols "On"
     filter "configurations:release"
+        runtime "Release"
         defines { "NDEBUG" }
         optimize "On"
 
