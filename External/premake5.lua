@@ -1,5 +1,4 @@
 project "googletest"
-    kind "Utility"
     targetdir(targetBuildPath .. "/%{prj.name}")
     objdir(objBuildPath .. "/%{prj.name}")
 
@@ -7,6 +6,7 @@ project "googletest"
     googletestBuildFolder = "%{prj.objdir}"
 
     filter "system:windows"
+        kind "Utility"
         filter "configurations:debug"
             prebuildcommands{
                 "{MKDIR} " .. googletestBuildFolder,
@@ -28,9 +28,11 @@ project "googletest"
             }
 
     filter "system:linux"
-        prebuildcommands{
+        kind "Makefile"
+        buildcommands{
             "{MKDIR} " .. googletestBuildFolder,
             "cmake -S " .. googletestDirectory .. " -B " .. googletestBuildFolder,
             "cmake --build " .. googletestBuildFolder .. " --config %{cfg.buildcfg}",
-            --"{COPY} " .. googletestBuildFolder .. "/lib/libgtest.a" .. " %{prj.targetdir}/libgtest.a"
+            "{MKDIR} %{prj.targetdir}",
+            "{COPY} " .. googletestBuildFolder .. "/lib/libgtest.a" .. " %{prj.targetdir}/libgtest.a"
         }
