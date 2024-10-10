@@ -12,7 +12,7 @@ function winLaunch(projectName, outputFile)
         "\t\t\t\"program\":\"${workspaceFolder}/Build/target/" .. projectName .. "/" .. projectName ..".exe\",\n" ..
         "\t\t\t\"stopAtEntry\":false,\n" ..
         "\t\t\t\"cwd\":\"${workspaceFolder}\",\n" ..
-        "\t\t\t\"console\": \"externalTerminal\"\n" ..
+        "\t\t\t\"console\": \"integratedTerminal\"\n" ..
         "\t\t},\n"
     )
 end
