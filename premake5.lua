@@ -1,23 +1,16 @@
-require "vscode"
 require "clean"
+require "vscode"
 
 workspace "DummyWorkspace"
+    location "Generated"
     cppdialect "C++17"
     configurations
     {
         "debug",
         "release"
     }
-    filter "system:windows"
-        platforms {"win32", "win64"}
-    filter "system:linux"
-        platforms {"lin32", "lin64"}
-    
-    filter "platforms:win32 or lin32"
-        architecture "x86"
-    
-    filter "platforms:win64 or lin64"
-        architecture "x86_64"
+
+    architecture "x86_64"
 
     filter "configurations:debug"
         defines { "DEBUG" }
@@ -26,5 +19,10 @@ workspace "DummyWorkspace"
         defines { "NDEBUG" }
         optimize "On"
 
-include "DummyWorkspace"
-include "external"
+    targetBuildPath = path.getdirectory(_SCRIPT) .. "/Build/target"
+    objBuildPath = path.getdirectory(_SCRIPT) .. "/Build/obj"
+
+include "External"
+include "DummyLib"
+include "DummyApp"
+include "DummyTest"
