@@ -1,38 +1,21 @@
 project "googletest"
-    targetdir(targetBuildPath .. "/%{prj.name}")
+    targetdir(targetBuildPath .. "/External")
     objdir(objBuildPath .. "/%{prj.name}")
 
-    googletestDirectory = "\"" .. path.getdirectory(_SCRIPT) .. "\"" .. "/googletest"
-    googletestBuildFolder = "%{prj.objdir}"
+    googletestDirectory = "\"" .. path.getdirectory(_SCRIPT) .. "\"" .. "/%{prj.name}"
 
     filter "system:windows"
         kind "Utility"
-        filter "configurations:debug"
-            prebuildcommands{
-                "{MKDIR} " .. googletestBuildFolder,
-                "cmake -S " .. googletestDirectory .. " -B " .. googletestBuildFolder,
-                "cmake --build " .. googletestBuildFolder .. " --config %{cfg.buildcfg}",
-            }
-            postbuildcommands {
-                "{COPY} " .. googletestBuildFolder .. "/lib/Debug/gtest.pdb" .. " %{prj.targetdir}",
-                "{COPY} " .. googletestBuildFolder .. "/lib/Debug/gtest.lib" .. " %{prj.targetdir}"
-            }
-        filter "configurations:release"
-            prebuildcommands{
-                "{MKDIR} " .. googletestBuildFolder,
-                "cmake -S " .. googletestDirectory .. " -B " .. googletestBuildFolder,
-                "cmake --build " .. googletestBuildFolder .. " --config %{cfg.buildcfg}",
-            }
-            postbuildcommands{
-                "{COPY} " .. googletestBuildFolder .. "/lib/Release/gtest.lib" .. " %{prj.targetdir}"
-            }
+        prebuildcommands{
+            "{MKDIR} %{prj.objdir}",
+            "cmake -S " .. googletestDirectory .. " -B %{prj.objdir} -DCMAKE_INSTALL_PREFIX=%{prj.targetdir}",
+            "cmake --build %{prj.objdir} --config %{cfg.buildcfg} --target install",
+        }
 
     filter "system:linux"
         kind "Makefile"
         buildcommands{
-            "{MKDIR} " .. googletestBuildFolder,
-            "cmake -S " .. googletestDirectory .. " -B " .. googletestBuildFolder,
-            "cmake --build " .. googletestBuildFolder .. " --config %{cfg.buildcfg}",
-            "{MKDIR} %{prj.targetdir}",
-            "{COPY} " .. googletestBuildFolder .. "/lib/libgtest.a" .. " %{prj.targetdir}/libgtest.a"
+            "{MKDIR} %{prj.objdir}",
+            "cmake -S " .. googletestDirectory .. " -B %{prj.objdir} -DCMAKE_INSTALL_PREFIX=%{prj.targetdir}",
+            "cmake --build %{prj.objdir} --config %{cfg.buildcfg} --target install",
         }
